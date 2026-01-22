@@ -18,7 +18,6 @@
             <?php if($_SESSION['rol'] == 'ADMIN'): ?>
             <li class="menu-title">Administración</li>
             <li><a href="../admin/usuarios.php"><i class="fas fa-user-shield"></i> Usuarios</a></li>
-            <li><a href="../admin/config.php"><i class="fas fa-cogs"></i> Configuración</a></li>
             <?php endif; ?>
         </ul>
     </nav>

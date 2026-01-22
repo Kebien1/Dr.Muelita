@@ -10,16 +10,36 @@ class Cita {
         $this->conn = $database->getConnection();
     }
 
-    // Listar citas para el calendario (devuelve JSON structure luego)
+    // Listar citas para el calendario
     public function listarParaCalendario() {
-    // IMPORTANTE: Debe llamar a vw_agenda, no a la tabla citas directamente
-    $query = "SELECT id_cita, fecha_hora_inicio as start, fecha_hora_fin as end, 
-                     motivo as title, estado, odontologo, paciente 
-              FROM vw_agenda"; 
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
+        $query = "SELECT id_cita, fecha_hora_inicio as start, fecha_hora_fin as end, 
+                         motivo as title, estado, odontologo, paciente 
+                  FROM vw_agenda"; 
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // --- NUEVO: Verificar Disponibilidad ---
+    public function verificarDisponibilidad($id_odontologo, $inicio, $fin) {
+        // Busca si hay alguna cita que se solape en horario y que NO esté cancelada
+        $sql = "SELECT COUNT(*) as total FROM " . $this->table . " 
+                WHERE id_odontologo = :odo 
+                AND estado != 'CANCELADA'
+                AND fecha_hora_inicio < :fin 
+                AND fecha_hora_fin > :inicio";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(":odo", $id_odontologo);
+        $stmt->bindParam(":inicio", $inicio);
+        $stmt->bindParam(":fin", $fin);
+        $stmt->execute();
+        
+        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Si total es 0, significa que está libre (TRUE). Si hay citas, devuelve FALSE.
+        return ($resultado['total'] == 0); 
+    }
 
     // Crear nueva cita
     public function crear($datos) {
@@ -38,12 +58,8 @@ class Cita {
         return $stmt->execute();
     }
 
-    // REGLA DE NEGOCIO: Anular citas sin confirmar 12 horas antes
+    // Anular citas sin confirmar (Regla de negocio opcional)
     public function anularVencidas() {
-        // Si falta menos de 12 horas para la cita y sigue "PROGRAMADA" (no confirmada/pagada), se anula?
-        // Nota: En tu requerimiento decía "confirmadas hasta 12 hrs antes".
-        // Aquí simulamos esa lógica: Si estamos a menos de 12 horas del inicio y el estado es PROGRAMADA, pasamos a CANCELADA.
-        
         $sql = "UPDATE citas SET estado = 'CANCELADA' 
                 WHERE estado = 'PROGRAMADA' 
                 AND fecha_hora_inicio < DATE_ADD(NOW(), INTERVAL 12 HOUR) 

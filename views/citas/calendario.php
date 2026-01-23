@@ -18,41 +18,54 @@ $doctores = $odoModel->listarTodos();
 <main class="main-content">
     
     <?php if(isset($_GET['ok'])): ?>
-        <div class="alert alert-success" style="padding: 10px; margin-bottom: 10px; font-size: 0.9rem;">
-            <i class="fas fa-check-circle"></i> Acción realizada con éxito.
+        <div class="alert alert-success" style="padding: 10px; margin-bottom: 10px; background: #d4edda; color: #155724; border-radius: 5px;">
+            <i class="fas fa-check-circle"></i> 
+            <?php 
+                if($_GET['ok'] == 'creado') echo 'Cita creada exitosamente.';
+                elseif($_GET['ok'] == 'editado') echo 'Cita actualizada correctamente.';
+                elseif($_GET['ok'] == 'cancelada') echo 'Cita cancelada.';
+                elseif($_GET['ok'] == 'movida') echo 'Cita reagendada exitosamente.';
+            ?>
         </div>
     <?php endif; ?>
 
-    <?php if(isset($_GET['error']) && $_GET['error'] == 'ocupado'): ?>
-        <div class="alert alert-danger" style="padding: 10px; margin-bottom: 10px; font-size: 0.9rem;">
-            <i class="fas fa-exclamation-triangle"></i> <strong>Horario ocupado.</strong>
+    <?php if(isset($_GET['error'])): ?>
+        <div class="alert alert-danger" style="padding: 10px; margin-bottom: 10px; background: #f8d7da; color: #721c24; border-radius: 5px;">
+            <i class="fas fa-exclamation-triangle"></i> 
+            <?php 
+                if($_GET['error'] == 'ocupado') echo '<strong>Horario no disponible.</strong> El doctor ya tiene una cita en ese horario.';
+                else echo 'Error al procesar la solicitud.';
+            ?>
         </div>
     <?php endif; ?>
 
     <div class="page-header" style="flex-wrap: wrap; gap: 10px;">
-        <h1 style="margin-right: auto;"><i class="far fa-calendar-alt"></i> Agenda</h1>
+        <h1 style="margin-right: auto;"><i class="far fa-calendar-alt"></i> Agenda de Citas</h1>
         
         <div style="display: flex; align-items: center; gap: 8px;">
-            <label style="font-weight: bold; color: #555; font-size: 0.9rem;">Ver:</label>
-            <select id="filtroDoctor" class="form-control" style="width: 180px; padding: 6px;" onchange="filtrarCalendario()">
+            <label style="font-weight: bold; color: #555; font-size: 0.9rem;">Filtrar por Doctor:</label>
+            <select id="filtroDoctor" class="form-control" style="width: 200px; padding: 6px;" onchange="filtrarCalendario()">
                 <option value="">Todos los Doctores</option>
                 <?php foreach($doctores as $d): ?>
-                    <option value="<?php echo $d['id_odontologo']; ?>">Dr. <?php echo $d['nombres']; ?></option>
+                    <option value="<?php echo $d['id_odontologo']; ?>">Dr. <?php echo $d['nombres'] . ' ' . $d['apellidos']; ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
 
         <button class="btn-primary" onclick="abrirModalCrear()">
-            <i class="fas fa-plus"></i> Cita
+            <i class="fas fa-plus"></i> Nueva Cita
         </button>
     </div>
 
-    <div style="display: flex; gap: 15px; margin-bottom: 10px; font-size: 0.8rem; color: #666;">
+    <div style="display: flex; gap: 15px; margin-bottom: 10px; font-size: 0.85rem; color: #666;">
         <div style="display: flex; align-items: center; gap: 4px;">
-            <div style="width: 12px; height: 12px; background: #3498db; border-radius: 2px;"></div> Programada
+            <div style="width: 14px; height: 14px; background: #3498db; border-radius: 2px;"></div> Programada
         </div>
         <div style="display: flex; align-items: center; gap: 4px;">
-            <div style="width: 12px; height: 12px; background: #2ecc71; border-radius: 2px;"></div> Atendida
+            <div style="width: 14px; height: 14px; background: #2ecc71; border-radius: 2px;"></div> Atendida
+        </div>
+        <div style="display: flex; align-items: center; gap: 4px;">
+            <div style="width: 14px; height: 14px; background: #e74c3c; border-radius: 2px;"></div> Cancelada
         </div>
     </div>
 
@@ -61,10 +74,11 @@ $doctores = $odoModel->listarTodos();
     </div>
 </main>
 
+<!-- MODAL PARA CREAR/EDITAR CITA -->
 <div id="modalCita" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 id="modalTitulo">Programar</h2>
+            <h2 id="modalTitulo">Nueva Cita</h2>
             <span class="close" onclick="cerrarModal()">&times;</span>
         </div>
         <div class="modal-body">
@@ -72,53 +86,66 @@ $doctores = $odoModel->listarTodos();
                 <input type="hidden" name="id_cita" id="id_cita">
 
                 <div class="form-group">
-                    <label>Paciente:</label>
+                    <label>Paciente: <span style="color: red;">*</span></label>
                     <select name="id_paciente" id="id_paciente" class="form-control" required>
-                        <option value="">Seleccione...</option>
+                        <option value="">Seleccione un paciente...</option>
                         <?php foreach($pacientes as $p): ?>
-                            <option value="<?php echo $p['id_paciente']; ?>"><?php echo $p['nombres'] . ' ' . $p['apellido_paterno']; ?></option>
+                            <option value="<?php echo $p['id_paciente']; ?>">
+                                <?php echo $p['nombres'] . ' ' . $p['apellido_paterno'] . ' - CI: ' . $p['ci']; ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Odontólogo:</label>
+                    <label>Odontólogo: <span style="color: red;">*</span></label>
                     <select name="id_odontologo" id="id_odontologo" class="form-control" required>
+                        <option value="">Seleccione un doctor...</option>
                         <?php foreach($doctores as $d): ?>
-                            <option value="<?php echo $d['id_odontologo']; ?>">Dr. <?php echo $d['nombres']; ?></option>
+                            <option value="<?php echo $d['id_odontologo']; ?>">
+                                Dr. <?php echo $d['nombres'] . ' ' . $d['apellidos']; ?>
+                                <?php if($d['especialidad']): ?> - <?php echo $d['especialidad']; ?><?php endif; ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="form-group">
-                        <label>Fecha:</label>
-                        <input type="date" name="fecha" id="fecha" required class="form-control">
+                        <label>Fecha: <span style="color: red;">*</span></label>
+                        <input type="date" name="fecha" id="fecha" required class="form-control" min="<?php echo date('Y-m-d'); ?>">
                     </div>
                     <div class="form-group">
-                        <label>Hora:</label>
-                        <input type="time" name="hora" id="hora" required class="form-control">
+                        <label>Hora: <span style="color: red;">*</span></label>
+                        <input type="time" name="hora" id="hora" required class="form-control" step="900">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Motivo:</label>
-                    <input type="text" name="motivo" id="motivo" placeholder="Ej: Dolor..." required class="form-control">
+                    <label>Motivo de consulta: <span style="color: red;">*</span></label>
+                    <textarea name="motivo" id="motivo" class="form-control" rows="3" placeholder="Ej: Dolor en muela, revisión general..." required style="resize: vertical;"></textarea>
+                </div>
+
+                <div id="infoEstado" style="display: none; background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                    <strong>Estado actual:</strong> <span id="estadoTexto"></span>
                 </div>
 
                 <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-top: 1px solid #eee; padding-top: 15px;">
-                    <button type="button" id="btnCancelar" onclick="cancelarCita()" style="display:none; background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
-                        <i class="fas fa-trash-alt"></i>
+                    
+                    <button type="button" id="btnCancelar" onclick="confirmarCancelacion()" style="display:none; background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-size: 0.9rem;">
+                        <i class="fas fa-ban"></i> Cancelar Cita
                     </button>
 
-                    <div style="display: flex; gap: 5px; margin-left: auto;">
-                        <a id="btnHistorial" href="#" target="_blank" style="display: none; background: #34495e; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                            <i class="fas fa-file-medical"></i>
+                    <div style="display: flex; gap: 8px; margin-left: auto;">
+                        <a id="btnHistorial" href="#" target="_blank" style="display: none; background: #34495e; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                            <i class="fas fa-file-medical"></i> Historial
                         </a>
-                        <a id="btnAtender" href="#" style="display: none; background: #2ecc71; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                        <a id="btnAtender" href="#" style="display: none; background: #2ecc71; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
                             <i class="fas fa-user-md"></i> Atender
                         </a>
-                        <button type="submit" class="btn-primary" style="padding: 8px 15px;">Guardar</button>
+                        <button type="submit" class="btn-primary" id="btnGuardar" style="padding: 8px 20px;">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
                     </div>
                 </div>
             </form>
@@ -130,7 +157,8 @@ $doctores = $odoModel->listarTodos();
 <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/es.js'></script>
 
 <script>
-    var calendar; 
+    var calendar;
+    var doctorFiltrado = '';
 
     document.addEventListener('DOMContentLoaded', function() {
         var calendarEl = document.getElementById('calendar');
@@ -138,85 +166,135 @@ $doctores = $odoModel->listarTodos();
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'es',
-            height: '100%', // Se adapta al contenedor CSS que limitamos
+            height: '100%',
             contentHeight: 'auto', 
-            aspectRatio: 1.8, // Hace el calendario más "achatado" (menos alto)
+            aspectRatio: 1.8,
             
-            // LÍMITES DE HORARIO (Para vistas Semana/Día)
-            slotMinTime: '07:00:00', // Empieza a las 7 AM
-            slotMaxTime: '21:00:00', // Termina a las 9 PM
-            allDaySlot: false, // Quita la fila "Todo el día" para ahorrar espacio
+            slotMinTime: '07:00:00',
+            slotMaxTime: '21:00:00',
+            allDaySlot: false,
+            slotDuration: '00:30:00',
 
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
                 right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
-            editable: true, 
-            events: {
-                url: '../../controllers/citaController.php?accion=listar',
-                extraParams: function() {
-                    return { id_odontologo: document.getElementById('filtroDoctor').value };
-                }
+            
+            businessHours: {
+                daysOfWeek: [1, 2, 3, 4, 5, 6],
+                startTime: '08:00',
+                endTime: '20:00'
+            },
+
+            editable: true,
+            droppable: false,
+            
+            events: function(fetchInfo, successCallback, failureCallback) {
+                fetch('../../controllers/citaController.php?accion=listar&id_odontologo=' + doctorFiltrado)
+                    .then(response => response.json())
+                    .then(data => successCallback(data))
+                    .catch(error => {
+                        console.error('Error al cargar citas:', error);
+                        failureCallback(error);
+                    });
             },
             
-            dateClick: function(info) { abrirModalCrear(info.dateStr); },
+            dateClick: function(info) {
+                abrirModalCrear(info.dateStr);
+            },
 
             eventClick: function(info) {
+                info.jsEvent.preventDefault();
                 var id = info.event.id;
+                
                 fetch('../../controllers/citaController.php?accion=obtener&id=' + id)
                     .then(response => response.json())
-                    .then(data => { abrirModalEditar(data); });
+                    .then(data => {
+                        if(data) {
+                            abrirModalEditar(data);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error al cargar los datos de la cita');
+                    });
             },
 
             eventDrop: function(info) {
+                if(!confirm('¿Confirmar reagendación de la cita?')) {
+                    info.revert();
+                    return;
+                }
+
                 var formData = new FormData();
                 formData.append('accion', 'mover');
                 formData.append('id_cita', info.event.id);
                 formData.append('start', formatearFechaISO(info.event.start));
-                formData.append('end', formatearFechaISO(info.event.end));
+                formData.append('end', formatearFechaISO(info.event.end || info.event.start));
 
-                fetch('../../controllers/citaController.php', { method: 'POST', body: formData })
+                fetch('../../controllers/citaController.php', { 
+                    method: 'POST', 
+                    body: formData 
+                })
                 .then(response => response.json())
                 .then(data => {
                     if(data.status === 'error') {
-                        alert("¡Error! " + data.message);
+                        alert('Error: ' + data.message);
                         info.revert();
+                    } else {
+                        window.location.href = 'calendario.php?ok=movida';
                     }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error al mover la cita');
+                    info.revert();
                 });
+            },
+
+            eventResize: function(info) {
+                info.revert();
+                alert('No se puede cambiar la duración. Las citas tienen duración fija de 30 minutos.');
             }
         });
+        
         calendar.render();
     });
 
-    function filtrarCalendario() { calendar.refetchEvents(); }
+    function filtrarCalendario() {
+        doctorFiltrado = document.getElementById('filtroDoctor').value;
+        calendar.refetchEvents();
+    }
 
     var modal = document.getElementById("modalCita");
     var form = document.getElementById("formCita");
-    var btnCancelar = document.getElementById('btnCancelar');
-    var btnAtender = document.getElementById('btnAtender');
-    var btnHistorial = document.getElementById('btnHistorial');
 
     function abrirModalCrear(fechaPreseleccionada) {
-        form.reset(); 
-        document.getElementById('id_cita').value = ""; 
-        document.getElementById('modalTitulo').innerText = "Programar";
-        btnAtender.style.display = "none"; 
-        btnHistorial.style.display = "none";
-        btnCancelar.style.display = "none";
+        form.reset();
+        document.getElementById('id_cita').value = "";
+        document.getElementById('modalTitulo').innerText = "Nueva Cita";
+        
+        document.getElementById('btnCancelar').style.display = "none";
+        document.getElementById('btnAtender').style.display = "none";
+        document.getElementById('btnHistorial').style.display = "none";
+        document.getElementById('infoEstado').style.display = "none";
+        document.getElementById('btnGuardar').style.display = "inline-block";
         
         if(fechaPreseleccionada) {
-            // Si clicaste en la vista Mes (solo fecha), pon la fecha y una hora por defecto
             if(fechaPreseleccionada.indexOf('T') === -1) {
                 document.getElementById('fecha').value = fechaPreseleccionada;
-                document.getElementById('hora').value = "09:00"; 
+                document.getElementById('hora').value = "09:00";
             } else {
-                // Si clicaste en Semana/Día (fecha y hora), separa ambas
                 let partes = fechaPreseleccionada.split('T');
                 document.getElementById('fecha').value = partes[0];
                 document.getElementById('hora').value = partes[1].substring(0, 5);
             }
+        } else {
+            document.getElementById('fecha').value = '';
+            document.getElementById('hora').value = '09:00';
         }
+        
         modal.style.display = "block";
     }
 
@@ -230,37 +308,75 @@ $doctores = $odoModel->listarTodos();
         document.getElementById('fecha').value = partes[0];
         document.getElementById('hora').value = partes[1].substring(0, 5);
 
-        document.getElementById('modalTitulo').innerText = "Editar";
-        btnAtender.style.display = "inline-block";
-        btnAtender.href = "atender.php?id_cita=" + data.id_cita;
-        btnHistorial.style.display = "inline-block";
-        btnHistorial.href = "../pacientes/historia.php?buscar_ci=" + data.ci;
-        btnCancelar.style.display = "inline-block"; 
+        document.getElementById('modalTitulo').innerText = "Modificar Cita";
+        
+        // Mostrar estado
+        document.getElementById('infoEstado').style.display = 'block';
+        document.getElementById('estadoTexto').innerText = data.estado;
+        document.getElementById('estadoTexto').style.color = 
+            data.estado == 'PROGRAMADA' ? '#3498db' :
+            data.estado == 'ATENDIDA' ? '#2ecc71' :
+            data.estado == 'CANCELADA' ? '#e74c3c' : '#666';
+
+        // Mostrar botones según estado
+        if(data.estado == 'PROGRAMADA') {
+            document.getElementById('btnCancelar').style.display = "inline-block";
+            document.getElementById('btnAtender').style.display = "inline-block";
+            document.getElementById('btnAtender').href = "atender.php?id_cita=" + data.id_cita;
+            document.getElementById('btnGuardar').style.display = "inline-block";
+        } else if(data.estado == 'ATENDIDA') {
+            document.getElementById('btnCancelar').style.display = "none";
+            document.getElementById('btnAtender').style.display = "none";
+            document.getElementById('btnGuardar').style.display = "none";
+        } else if(data.estado == 'CANCELADA') {
+            document.getElementById('btnCancelar').style.display = "none";
+            document.getElementById('btnAtender').style.display = "none";
+            document.getElementById('btnGuardar').style.display = "none";
+        }
+        
+        document.getElementById('btnHistorial').style.display = "inline-block";
+        document.getElementById('btnHistorial').href = "../pacientes/historia.php?buscar_ci=" + data.ci;
 
         modal.style.display = "block";
     }
 
-    function cancelarCita() {
-        if(!confirm("¿Cancelar cita?")) return;
+    function confirmarCancelacion() {
+        if(!confirm('¿Está seguro de cancelar esta cita?\n\nEsta acción quedará registrada en el sistema.')) {
+            return;
+        }
+        
         var id = document.getElementById('id_cita').value;
         var formData = new FormData();
         formData.append('accion', 'cancelar');
         formData.append('id_cita', id);
 
-        fetch('../../controllers/citaController.php', { method: 'POST', body: formData })
+        fetch('../../controllers/citaController.php', { 
+            method: 'POST', 
+            body: formData 
+        })
         .then(response => response.json())
         .then(data => {
             if(data.status === 'success') {
-                cerrarModal();
-                calendar.refetchEvents();
+                window.location.href = 'calendario.php?ok=cancelada';
             } else {
-                alert("Error.");
+                alert('Error al cancelar la cita.');
             }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al procesar la cancelación');
         });
     }
 
-    function cerrarModal() { modal.style.display = "none"; }
-    window.onclick = function(event) { if (event.target == modal) { cerrarModal(); } }
+    function cerrarModal() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            cerrarModal();
+        }
+    }
 
     function formatearFechaISO(date) {
         var year = date.getFullYear();

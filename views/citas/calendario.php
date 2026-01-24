@@ -56,9 +56,9 @@ $doctores = $odoModel->listarTodos();
             <i class="fas fa-calendar-day"></i> Agenda del Día
         </a>
 
-        <button class="btn-primary" onclick="abrirModalCrear()">
-            <i class="fas fa-plus"></i> Nueva Cita
-        </button>
+       <a href="nueva.php" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+    <i class="fas fa-plus"></i> Nueva Cita
+</a>
     </div>
 
     <div style="display: flex; gap: 15px; margin-bottom: 10px; font-size: 0.85rem; color: #666;">
@@ -209,20 +209,15 @@ $doctores = $odoModel->listarTodos();
             },
 
             eventClick: function(info) {
+                // 1. Evitamos que el navegador haga cosas raras por defecto
                 info.jsEvent.preventDefault();
+
+                // 2. Obtenemos el ID de la cita en la que hiciste clic
                 var id = info.event.id;
                 
-                fetch('../../controllers/citaController.php?accion=obtener&id=' + id)
-                    .then(response => response.json())
-                    .then(data => {
-                        if(data) {
-                            abrirModalEditar(data);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Error al cargar los datos de la cita');
-                    });
+                // 3. EN LUGAR DE BUSCAR DATOS Y ABRIR UNA VENTANA FLOTANTE...
+                // ...Simplemente redirigimos a tu nueva página profesional de edición.
+                window.location.href = 'editar.php?id=' + id;
             },
 
             eventDrop: function(info) {

@@ -22,9 +22,16 @@ $citas = $citaModel->obtenerCitasDelDia($fecha, $id_odontologo);
 <main class="main-content">
     <div class="page-header">
         <h1><i class="fas fa-calendar-day"></i> Agenda del Día</h1>
-        <a href="calendario.php" class="btn-primary">
-            <i class="far fa-calendar-alt"></i> Ver Calendario
-        </a>
+        
+        <div style="display: flex; gap: 10px;">
+            <a href="calendario.php" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="far fa-calendar-alt"></i> Ver Calendario
+            </a>
+
+            <a href="nueva.php" class="btn-primary" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-plus"></i> Nueva Cita
+            </a>
+        </div>
     </div>
 
     <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;">
